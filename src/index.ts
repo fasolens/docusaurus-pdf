@@ -94,6 +94,9 @@ export async function generatePdf(
     console.log(chalk.cyan(`Generating PDF of ${nextPageUrl}`));
     console.log();
 
+    const urlSplited = nextPageUrl.split('/');
+    const pageName = urlSplited[urlSplited.length-1]
+
     await page.goto(`${nextPageUrl}`, { waitUntil: 'networkidle2' })
       .then((resp) => resp?.text())
       .then((html) => {
@@ -110,16 +113,19 @@ export async function generatePdf(
       nextPageUrl = "";
     }
 
-
     let html = await page.$eval('article', (element) => {
       return element.outerHTML;
     });
-
 
     await page.setContent(html);
     await page.addStyleTag({ url: stylePath });
     await page.addScriptTag({ url: scriptPath });
     const pdfBuffer = await page.pdf({ path: "", format: 'A4', printBackground: true, margin: { top: 25, right: 35, left: 35, bottom: 25 } });
+
+    console.log();
+    
+    console.log(pageName);
+    fs.writeFileSync(`${pageName}.pdf`, pdfBuffer);
 
     generatedPdfBuffers.push(pdfBuffer);
 
